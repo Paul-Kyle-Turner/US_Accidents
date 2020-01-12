@@ -1,13 +1,17 @@
 import numpy as np
 import pandas as pd
+import re
 
 import matplotlib.pyplot as plt
 
 from sklearn.manifold import TSNE
 
-def regex_replacer(data):
-    return "jklsanfljksdnflk"
-
+# Simple regex to change the multiple white space issue
+def regex_replacer(description):
+    reg_description = []
+    for desc in data:
+        reg_description.append(re.sub(desc, r'\s+', ' '))
+    return reg_description
 
 
 def gather_data(file="US_Accidents_May19.csv"):
