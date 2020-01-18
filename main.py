@@ -15,18 +15,42 @@ from nltk.corpus import stopwords
 import pyLDAvis
 import pyLDAvis.gensim
 import spacy
+import pickle
 
 import matplotlib.pyplot as plt
 
 from sklearn.manifold import TSNE
 
 
-# Simple regex to change the multiple white space issue
-def regex_replacer(description):
-    reg_description = []
-    for desc in description:
-        reg_description.append(re.sub(r'\s+', ' ', desc))
-    return reg_description
+class RegexReplacer:
+
+    # Simple regex to change the multiple white space issue
+    @staticmethod
+    def regex_replacer(text, regex=r'\s+', replacement_text=' '):
+        reg_text = []
+        for desc in text:
+            reg_text.append(re.sub(regex, replacement_text, desc))
+        return reg_text
+
+    """
+    Replaces the regex multiple times, for easy regex use
+        Not best practice but easier
+
+        :param
+            text - an array type that holds the text that you want to have replacements done on
+            regex - an array or dict type object of the regular expression and if dict type object the regular
+             expression and replacement text
+            replacement_text - array type object only used it the regex object is not dict
+    """
+    @staticmethod
+    def regex_multi_replacer(text, regex, replacement_text=None):
+        if type(regex) is dict:
+            for key in regex:
+                text = RegexReplacer.regex_replacer(text, key, regex[key])
+        else:
+            for key, value in zip(regex, replacement_text):
+                text = RegexReplacer.regex_replacer(text, key, value)
+        return text
 
 
 def create_gensim_word_2_vec_model(content_list):
@@ -37,7 +61,7 @@ def create_gensim_word_2_vec_model(content_list):
 
 
 # Author Anthony Breitzman, modifications Paul Turner
-# This next section of functions was mainly taken from week 9 content
+# This is used to create a topic model of the given descriptions
 def remove_stopwords(texts, stop_words):
     return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
@@ -86,7 +110,7 @@ def visulaizer_of_LDA(content_list):
 
     lda_model = LdaModel(corpus=corpus,
                          id2word=id2word,
-                         num_topics=20,
+                         num_topics=6,
                          random_state=100,
                          update_every=1,
                          chunksize=100,
@@ -114,9 +138,24 @@ if __name__ == '__main__':
 
     description = data['Description'].tolist()
     description = [x for x in description if str(x) != 'nan']
-    reg_description = regex_replacer(description)
+
+    regex = {r'Accident|accident': ' ',
+             r'\s+': ' '}
+
+    reg_description = RegexReplacer.regex_multi_replacer(description, regex)
+
+    print(reg_description)
 
     LDA_vis = visulaizer_of_LDA(reg_description)
+
+    with open('graph/LDA.pickle', 'wb') as file:
+        pickle.dump(LDA_vis, file)
+
+    LDA_vis = None
+    with open('graph/LDA.pickle', 'rb') as file:
+        LDA_vis = pickle.load(file)
+
+    pyLDAvis.show(LDA_vis)
 
     # severity = data.loc[:, "Severity"]
 
