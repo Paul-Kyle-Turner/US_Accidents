@@ -144,8 +144,6 @@ if __name__ == '__main__':
 
     reg_description = RegexReplacer.regex_multi_replacer(description, regex)
 
-    print(reg_description)
-
     LDA_vis = visulaizer_of_LDA(reg_description)
 
     with open('graph/LDA.pickle', 'wb') as file:
